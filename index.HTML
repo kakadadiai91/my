@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>卡卡定制户籍猎手</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui, sans-serif}
+body{background:#0a0a12;overflow:hidden}
+
+.welcome{
+  position:fixed;inset:0;background:#0a0a12;z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;color:#fff;
+  animation:fadeOut 1s ease 2s forwards;
+  pointer-events:none;
+}
+@keyframes fadeOut{
+  to{opacity:0;visibility:hidden}
+}
+.welcome h1{
+  font-size:24px;
+  background:linear-gradient(90deg,#00ff99,#0099ff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+
+.login{position:fixed;inset:0;background:#111222;display:grid;place-content:center;padding:20px}
+.login-box{width:100%;min-width:300px;background:#1c1c3a;border-radius:16px;padding:30px}
+.login-box h2{color:#fff;text-align:center;margin-bottom:20px}
+.login-input{width:100%;height:46px;background:#272947;border:none;border-radius:12px;padding:0 14px;color:#fff;margin-bottom:12px;outline:none}
+.login-btn{width:100%;height:46px;background:#00aaff;border:none;border-radius:12px;color:#fff;font-weight:bold}
+.tip{font-size:12px;color:#888;text-align:center;margin-top:14px}
+
+.main{position:fixed;inset:0;display:flex}
+.sidebar{
+  width:260px;height:100%;background:#131a29;color:#fff;
+  position:absolute;left:0;top:0;z-index:10;
+  transform:translateX(-100%);transition:transform 0.3s ease;
+  padding:20px;display:flex;flex-direction:column
+}
+.sidebar.show{transform:translateX(0)}
+.sidebar h3{margin-bottom:20px;font-size:16px}
+.menu-btn{
+  height:44px;background:#1e273a;border:none;border-radius:10px;color:#fff;margin-bottom:10px;
+  text-align:left;padding:0 14px;font-size:14px;cursor:pointer
+}
+.menu-btn:hover{background:#2a3750}
+.info{margin-top:auto;font-size:12px;color:#7a828e}
+
+.chat{flex:1;background:#ebebeb;display:flex;flex-direction:column;position:relative}
+.head{
+  height:56px;background:#07c160;color:#fff;display:flex;align-items:center;
+  padding:0 16px;font-weight:bold
+}
+.toggle-btn{width:40px;height:40px;background:none;border:none;color:#fff;font-size:20px;margin-right:10px}
+.content{flex:1;padding:10px;overflow-y:auto}
+.msg{margin-bottom:10px;max-width:80%}
+.bot{margin-right:auto}
+.user{margin-left:auto}
+.msg-body{padding:12px 14px;border-radius:14px;font-size:15px}
+.bot .msg-body{background:#fff;border-bottom-left-radius:4px}
+.user .msg-body{background:#95ec69;border-bottom-right-radius:4px}
+.input-bar{
+  height:60px;background:#f5f5f5;display:flex;align-items:center;
+  padding:8px;border-top:1px solid #ddd
+}
+.input-bar input{
+  flex:1;height:44px;border-radius:22px;border:none;
+  outline:none;padding:0 16px;background:#fff
+}
+.input-bar button{
+  width:60px;height:44px;background:#07c160;color:#fff;
+  border:none;border-radius:22px;margin-left:8px
+}
+</style>
+</head>
+<body>
+
+<div class="welcome">
+  <h1>欢迎使用卡卡定制户籍猎手</h1>
+  <p>Loading...</p>
+</div>
+
+<div class="login" id="loginBox">
+  <div class="login-box">
+    <h2>账号登录</h2>
+    <input class="login-input" id="phone" placeholder="请输入11位手机号" maxlength="11">
+    <input class="login-input" id="kami" placeholder="请输入卡密">
+    <button class="login-btn" onclick="userLogin()">登录</button>
+    <div class="tip">购买卡密：https://shop.682fk.com/shop/小店の卡卡</div>
+  </div>
+</div>
+
+<div class="main" id="mainBox" style="display:none">
+  <div class="sidebar" id="sidebar">
+    <h3>功能菜单</h3>
+    <button class="menu-btn" onclick="doSign()">📅 每日签到</button>
+    <button class="menu-btn" onclick="doTest()">🔍 执行查询</button>
+    <button class="menu-btn" onclick="closeMenu()">关闭菜单</button>
+    <div class="info">版本：卡卡定制版 v1.0</div>
+  </div>
+
+  <div class="chat">
+    <div class="head">
+      <button class="toggle-btn" onclick="toggleMenu()">☰</button>
+      <div id="title">户籍猎手（积分：0）</div>
+    </div>
+    <div class="content" id="msgBox"></div>
+    <div class="input-bar">
+      <input id="msgInput" placeholder="输入内容...">
+      <button onclick="sendMsg()">发送</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEV_PWD = "admin123";
+
+// 100个纯随机无规律卡密
+const validKeys = [
+"JELV2WLS22FD","NTBLAKH8MMEG","YGDVUTPWCVLQ","9NVH3ZFYSNGC","R5LFUJE7BKMP",
+"QH3AQ6SAA9JA","SU47TN2FU98T","PGMBMLR9G368","ZDRY8VDN79TX","CUMBSZAYVB64",
+"8XET64KEVJX5","NLLP6PTC8NRD","RP6KLSVPQJMT","2T72VWDEQYHC","GKPPTFHF9RBV",
+"FJQWW224WKEC","R45JPDTTT5LL","CW786MYL4MWA","BYXBEYE955MV","HRA27S299BV6",
+"VTZBEFVQKMQG","N7BVRMUCB3PW","Y8JUBBJXJHFD","9N2T3Q6B8M57","QKS44TNPMBZ9",
+"7XVJATYYY447","GJ55ASUKP28C","6SHVVS57MF67","KLM2F8U6VNUV","6VGT72A22UGK",
+"5VNJEPAUCCRB","L6JFAHM4JFY2","PY6GMU8G9GJK","UQVETKVSQWS5","USD36248HTBY",
+"N4WS9Z8ALVV5","VL2Q9CBFM52M","HDZVG8ZL8UJG","KTTMD4L5ECYW","MT8T4VNRBU8E",
+"H8YZZZLTZ6CJ","5F8EYBPMPGHQ","K6F95H38R24B","W6VSZ6JYN5RZ","DDJC59ZH7XUC",
+"ABJAHND3WM8U","VDXBAR2AAD36","JVSW739665HG","EJ8HJ9RZ8767","XT9TPKSYSWA7",
+"SWH3HYZGGT5D","8FFDA5LZEH7L","2R2KUT67DZAY","7NDTCQTH2JQG","WR6TSUDHM8
